@@ -49,7 +49,10 @@
 	"scripts": {
 		"build": "directus-extension build",
 		"dev": "directus-extension build -w --no-minify",
-		"link": "directus-extension link"
+		"link": "directus-extension link",
+		"test": "echo 'Run: npm install --save-dev jest @types/jest ts-jest && npx jest'",
+		"test:watch": "echo 'Run: npx jest --watch'",
+		"test:coverage": "echo 'Run: npx jest --coverage'"
 	},
 	"dependencies": {
 		"crypto-js": "^4.2.0"
