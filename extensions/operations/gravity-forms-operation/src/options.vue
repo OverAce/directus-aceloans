@@ -2,7 +2,7 @@
 import type { Field, FieldMeta } from '@directus/types';
 import type { Options as GravityFormsOptions } from './api';
 import { computed, ref, watch } from 'vue';
-import { forms, entries, notifications } from './endpoints';
+import { forms, entries, notifications, workflows } from './endpoints';
 
 type PartialExcept<T, K extends keyof T> = Partial<T> & Pick<T, K>;
 
@@ -38,6 +38,7 @@ const endpoints = {
 	forms,
 	entries,
 	notifications,
+	workflows,
 };
 
 const formValues = ref<GravityFormsOptions>(props.value);
@@ -119,6 +120,7 @@ const staticFields: FlexibleField[] = [
 					{ text: 'Forms', value: 'forms', icon: 'dynamic_form' },
 					{ text: 'Entries', value: 'entries', icon: 'list_alt' },
 					{ text: 'Notifications', value: 'notifications', icon: 'notifications' },
+					{ text: 'Workflows', value: 'workflows', icon: 'account_tree' },
 				],
 			},
 		},
