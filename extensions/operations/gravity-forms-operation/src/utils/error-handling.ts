@@ -41,7 +41,7 @@ export async function parseAPIError(
 /**
  * Get user-friendly error message
  */
-export function getErrorMessage(statusCode: number, details: any, resourceType: string = 'resource'): string {
+export function getErrorMessage(statusCode: number, details: any): string {
 	const detailMessage = details?.message || details?.error || '';
 
 	switch (statusCode) {
@@ -52,7 +52,7 @@ export function getErrorMessage(statusCode: number, details: any, resourceType: 
 		case 403:
 			return 'Forbidden: You do not have permission to access this resource.';
 		case 404:
-			return `${resourceType} not found: ${detailMessage || `The requested ${resourceType} does not exist`}`;
+			return `Resource not found: ${detailMessage || 'The requested resource does not exist'}`;
 		case 429:
 			return 'Rate limit exceeded. Please try again later.';
 		case 500:
