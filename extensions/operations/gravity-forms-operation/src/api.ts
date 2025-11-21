@@ -3,6 +3,7 @@ import { defineOperationApi } from '@directus/extensions-sdk';
 import { log, request } from 'directus:api';
 import { forms, entries, notifications, workflows } from './endpoints';
 import { GravityForms } from './gravity-forms';
+import { GravityFlow } from './gravity-flow';
 
 export interface Options {
 	baseUrl: string;
@@ -24,7 +25,11 @@ export default defineOperationApi<Options>({
 	id: 'gravity-forms-operation',
 	handler: async (options) => {
 		const { endpoint, action, baseUrl, consumerKey, consumerSecret, ...params } = options;
-		const client = new GravityForms(baseUrl, consumerKey, consumerSecret, request, log);
+
+		// Use GravityFlow client for workflows endpoint, GravityForms for others
+		const client = endpoint === 'workflows'
+			? new GravityFlow(baseUrl, consumerKey, consumerSecret, request, log)
+			: new GravityForms(baseUrl, consumerKey, consumerSecret, request, log);
 
 		const selectedEndpoint = endpoints[endpoint as keyof typeof endpoints];
 
