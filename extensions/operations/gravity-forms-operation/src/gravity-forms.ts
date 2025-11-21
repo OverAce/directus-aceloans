@@ -1,15 +1,7 @@
-import HmacSHA1 from 'crypto-js/hmac-sha1.js';
-import Base64 from 'crypto-js/enc-base64.js';
-
-export interface APIError {
-	code: string;
-	message: string;
-	details?: any;
-	endpoint?: string;
-	method?: string;
-	timestamp?: string;
-	statusCode?: number;
-}
+import type { APIError } from './types';
+import { generateOAuthSignature } from './utils/oauth';
+import { parseAPIError } from './utils/error-handling';
+import { shouldRetry, delay } from './utils/retry';
 
 export class GravityForms {
 	private baseUrl: string;
@@ -17,130 +9,25 @@ export class GravityForms {
 	private consumerSecret: string;
 	private request: any;
 	private log: any;
-	private retryAttempts: number = 3;
-	private retryDelay: number = 1000; // ms
+	private retryAttempts: number;
+	private retryDelay: number; // ms
 
-	constructor(baseUrl: string, consumerKey: string, consumerSecret: string, request: any, log: any) {
+	constructor(
+		baseUrl: string,
+		consumerKey: string,
+		consumerSecret: string,
+		request: any,
+		log: any,
+		retryAttempts: number = 3,
+		retryDelay: number = 1000
+	) {
 		this.baseUrl = baseUrl.replace(/\/$/, ''); // Remove trailing slash
 		this.consumerKey = consumerKey;
 		this.consumerSecret = consumerSecret;
 		this.request = request;
 		this.log = log;
-	}
-
-	/**
-	 * Generate OAuth 1.0a signature for Gravity Forms API
-	 */
-	private generateSignature(method: string, url: string, params: Record<string, string>): string {
-		const timestamp = Math.floor(Date.now() / 1000).toString();
-		const nonce = Math.random().toString(36).substring(2, 15);
-
-		const oauthParams = {
-			oauth_consumer_key: this.consumerKey,
-			oauth_nonce: nonce,
-			oauth_signature_method: 'HMAC-SHA1',
-			oauth_timestamp: timestamp,
-			oauth_version: '1.0',
-			...params,
-		};
-
-		// Sort parameters
-		const sortedParams = Object.keys(oauthParams)
-			.sort()
-			.map(key => `${encodeURIComponent(key)}=${encodeURIComponent(oauthParams[key])}`)
-			.join('&');
-
-		// Create signature base string
-		const baseString = [
-			method.toUpperCase(),
-			encodeURIComponent(url),
-			encodeURIComponent(sortedParams),
-		].join('&');
-
-		// Generate signature using HMAC-SHA1
-		const signingKey = `${encodeURIComponent(this.consumerSecret)}&`;
-		const signature = Base64.stringify(HmacSHA1(baseString, signingKey));
-
-		return signature;
-	}
-
-	/**
-	 * Parse API error response
-	 */
-	private async parseAPIError(response: Response, endpoint: string, method: string): Promise<APIError> {
-		let errorDetails: any = {};
-
-		try {
-			const contentType = response.headers.get('content-type');
-			if (contentType && contentType.includes('application/json')) {
-				errorDetails = await response.json();
-			} else {
-				errorDetails = { message: await response.text() };
-			}
-		} catch (e) {
-			errorDetails = { message: response.statusText };
-		}
-
-		const apiError: APIError = {
-			code: `HTTP_${response.status}`,
-			message: this.getErrorMessage(response.status, errorDetails),
-			details: errorDetails,
-			endpoint,
-			method,
-			timestamp: new Date().toISOString(),
-			statusCode: response.status,
-		};
-
-		return apiError;
-	}
-
-	/**
-	 * Get user-friendly error message
-	 */
-	private getErrorMessage(statusCode: number, details: any): string {
-		const detailMessage = details?.message || details?.error || '';
-
-		switch (statusCode) {
-			case 400:
-				return `Bad Request: ${detailMessage || 'Invalid parameters provided'}`;
-			case 401:
-				return 'Authentication failed. Please check your consumer key and secret.';
-			case 403:
-				return 'Forbidden: You do not have permission to access this resource.';
-			case 404:
-				return `Resource not found: ${detailMessage || 'The requested resource does not exist'}`;
-			case 429:
-				return 'Rate limit exceeded. Please try again later.';
-			case 500:
-			case 502:
-			case 503:
-			case 504:
-				return `Server error: ${detailMessage || 'The server encountered an error'}`;
-			default:
-				return `Request failed with status ${statusCode}: ${detailMessage || 'Unknown error'}`;
-		}
-	}
-
-	/**
-	 * Check if error should be retried
-	 */
-	private shouldRetry(statusCode: number, attempt: number): boolean {
-		if (attempt >= this.retryAttempts) {
-			return false;
-		}
-
-		// Retry on rate limiting and server errors
-		const retryableStatuses = [429, 500, 502, 503, 504];
-		return retryableStatuses.includes(statusCode);
-	}
-
-	/**
-	 * Delay execution with exponential backoff
-	 */
-	private async delay(attempt: number): Promise<void> {
-		const delayMs = this.retryDelay * Math.pow(2, attempt);
-		this.log.info(`Retrying in ${delayMs}ms...`);
-		return new Promise(resolve => setTimeout(resolve, delayMs));
+		this.retryAttempts = retryAttempts;
+		this.retryDelay = retryDelay;
 	}
 
 	/**
@@ -160,9 +47,13 @@ export class GravityForms {
 
 		for (let attempt = 0; attempt < this.retryAttempts; attempt++) {
 			try {
-				const signature = this.generateSignature(method, url, params);
-				const timestamp = Math.floor(Date.now() / 1000).toString();
-				const nonce = Math.random().toString(36).substring(2, 15);
+				const { signature, timestamp, nonce } = generateOAuthSignature(
+					method,
+					url,
+					params,
+					this.consumerKey,
+					this.consumerSecret
+				);
 
 				const authHeader = [
 					`oauth_consumer_key="${this.consumerKey}"`,
@@ -200,7 +91,7 @@ export class GravityForms {
 				const response = await this.request(requestUrl, requestOptions);
 
 				if (!response.ok) {
-					const apiError = await this.parseAPIError(response, endpoint, method);
+					const apiError = await parseAPIError(response, endpoint, method);
 					lastError = apiError;
 
 					this.log.warn(`[Gravity Forms API] Request failed: ${apiError.message}`, {
@@ -209,8 +100,8 @@ export class GravityForms {
 						details: apiError.details,
 					});
 
-					if (this.shouldRetry(apiError.statusCode!, attempt)) {
-						await this.delay(attempt);
+					if (apiError.statusCode !== undefined && shouldRetry(apiError.statusCode, attempt, this.retryAttempts)) {
+						await delay(attempt, this.retryDelay, this.log);
 						continue;
 					}
 
@@ -232,7 +123,7 @@ export class GravityForms {
 
 				if (attempt < this.retryAttempts - 1) {
 					this.log.warn(`[Gravity Forms API] Retrying due to network error...`);
-					await this.delay(attempt);
+					await delay(attempt, this.retryDelay, this.log);
 					continue;
 				}
 
