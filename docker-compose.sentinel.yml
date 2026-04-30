@@ -1,0 +1,26 @@
+# ==============================================================================
+# Directus AceLoans — Sentinel (staging) overlay
+# ==============================================================================
+#
+# Composes with the portable base on the sentinel host:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.sentinel.yml up -d
+#
+# Adds:
+#   - Host port binding 8055:8055 for LAN access from M2
+#   - Pull policy "if_not_present" (avoids pulling on every up)
+#   - uploads/extensions bind mounts
+#   - .env.staging environment file (cloud Supabase project; see README)
+# ==============================================================================
+
+services:
+
+  directus:
+    pull_policy: if_not_present
+    ports:
+      - "8055:8055"
+    volumes:
+      - ./uploads:/directus/uploads
+      - ./extensions:/directus/extensions:ro
+    env_file:
+      - .env.staging

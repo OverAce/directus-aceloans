@@ -1,36 +1,50 @@
-version: '3'
+# ==============================================================================
+# Directus AceLoans — Base (portable)
+# ==============================================================================
+#
+# Portable base file. No host port bindings, no host-specific mounts, no
+# host_gateway entries. Each deployment target supplies its own overlay:
+#
+#   Sentinel (staging):
+#     docker compose -f docker-compose.yml -f docker-compose.sentinel.yml up -d
+#
+#   M2-local dev (follow-up; overlay TBD):
+#     docker compose -f docker-compose.yml -f docker-compose.m2.yml up -d
+#
+# Pattern reference: kestra-kiron uses the same base + overlay split.
+# ==============================================================================
+
 services:
 
-  cache:
-    container_name: cache
-    image: redis:6
-    networks:
-      - directus
-
   directus:
-    container_name: directus
-    image: directus/directus:latest
-    ports:
-      - 8055:8055
-    volumes:
-      # By default, uploads are stored in /directus/uploads
-      # Always make sure your volumes matches the storage root when using
-      # local driver
-      - ./uploads:/directus/uploads
-      # Make sure to also mount the volume when using SQLite
-      # - ./database:/directus/database
-      # If you want to load extensions from the host
-      - ./extensions:/directus/extensions
+    container_name: aceloans-directus
+    image: directus/directus:11.15.1
     networks:
       - directus
     depends_on:
-      - cache
-    # environment:
-    #   DB_SCHEMA: 'directus'
-    #   DB_CUSTOM_SCHEMA: "directus"
-    #   DB_SEARCH_PATH: "array:directus,public"
-    env_file:
-      - .env.local
+      directus-cache:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8055/server/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  directus-cache:
+    container_name: aceloans-directus-cache
+    image: redis:7-alpine
+    networks:
+      - directus
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
 
 networks:
   directus:
+    name: aceloans-directus
