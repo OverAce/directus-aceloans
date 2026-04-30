@@ -1,36 +1,93 @@
-version: '3'
+# ==============================================================================
+# Directus AceLoans - Back-Office Data Management
+# ==============================================================================
+#
+# Usage:
+#   docker compose --profile local up -d       # Local dev (Supabase at localhost:54322)
+#   docker compose --profile staging up -d      # Staging (remote Supabase DB, SSL)
+#   docker compose --profile local down          # Stop
+#
+# Prerequisites:
+#   - Copy .env.example to .env.local (local) or .env.staging (staging)
+#   - Build extensions on host:
+#       cd extensions/operations/gravity-forms-operation && npm install && npm run build
+#   - For local profile: start Supabase first with `supabase start`
+#
+# ==============================================================================
+
 services:
 
-  cache:
-    container_name: cache
-    image: redis:6
+  # --- Redis cache (shared by both profiles) ----------------------------------
+  directus-cache:
+    container_name: aceloans-directus-cache
+    image: redis:7-alpine
+    profiles:
+      - local
+      - staging
     networks:
       - directus
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
 
-  directus:
-    container_name: directus
-    image: directus/directus:latest
+  # --- Directus: local dev (Supabase at host.docker.internal:54322) -----------
+  directus-local:
+    container_name: aceloans-directus
+    image: directus/directus:11.15.1
+    profiles:
+      - local
     ports:
-      - 8055:8055
+      - "8055:8055"
     volumes:
-      # By default, uploads are stored in /directus/uploads
-      # Always make sure your volumes matches the storage root when using
-      # local driver
       - ./uploads:/directus/uploads
-      # Make sure to also mount the volume when using SQLite
-      # - ./database:/directus/database
-      # If you want to load extensions from the host
-      - ./extensions:/directus/extensions
+      - ./extensions:/directus/extensions:ro
     networks:
       - directus
     depends_on:
-      - cache
-    # environment:
-    #   DB_SCHEMA: 'directus'
-    #   DB_CUSTOM_SCHEMA: "directus"
-    #   DB_SEARCH_PATH: "array:directus,public"
+      directus-cache:
+        condition: service_healthy
     env_file:
       - .env.local
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8055/server/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+  # --- Directus: staging (remote Supabase DB, SSL) ----------------------------
+  directus-staging:
+    container_name: aceloans-directus
+    image: directus/directus:11.15.1
+    profiles:
+      - staging
+    ports:
+      - "8055:8055"
+    volumes:
+      - ./uploads:/directus/uploads
+      - ./extensions:/directus/extensions:ro
+    networks:
+      - directus
+    depends_on:
+      directus-cache:
+        condition: service_healthy
+    env_file:
+      - .env.staging
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8055/server/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
 
 networks:
   directus:
+    name: aceloans-directus
