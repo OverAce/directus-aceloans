@@ -26,7 +26,7 @@ absorbed into the submodule.
 | ------------------------------------------------- | -------------------------------------------------------- |
 | `docker-compose.yml`                              | Portable base (no host ports, no host-specific mounts).  |
 | `docker-compose.sentinel.yml`                     | Staging overlay for the sentinel host.                   |
-| `docker-compose.m2.yml`                           | M2-local dev overlay (follow-up; not yet present).       |
+| `docker-compose.mbp.yml`                          | MBP-local dev overlay (follow-up; not yet present).      |
 | `scripts/setup-directus.sh`                       | Local-dev bootstrap: schema + KEY/SECRET + bring-up.     |
 | `extensions/operations/gravity-forms-operation/`  | Custom Directus Flow operation (lives on its own branch; rebased onto `main` on merge). |
 | `.env.example`                                    | Template for `.env.staging` / `.env.local`.              |

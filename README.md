@@ -13,7 +13,7 @@ Directus is used as a headless CMS and API platform for managing data in the Kir
 3. Run the sentinel compose command from your MBP using that context.
 4. Access Directus over LAN at `http://sentinel.local:8055` (adjust hostname if different).
 
-M2-local development is not documented yet; that workflow depends on the follow-up `docker-compose.m2.yml` overlay.
+MBP-local development is not documented yet; that workflow depends on the follow-up `docker-compose.mbp.yml` overlay.
 
 ## Structure
 
@@ -27,7 +27,7 @@ M2-local development is not documented yet; that workflow depends on the follow-
 This repo follows a Kestra-style two-file compose layout (see `kestra-kiron`):
 the base `docker-compose.yml` is portable and gets composed with a per-target
 overlay at deploy time. The previous `--profile local/staging` layout has been
-removed; an M2-local dev overlay (`docker-compose.m2.yml`) is a follow-up task.
+removed; an MBP-local dev overlay (`docker-compose.mbp.yml`) is a follow-up task.
 
 ## Sentinel deployment
 

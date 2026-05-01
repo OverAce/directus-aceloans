@@ -28,7 +28,7 @@ docker compose -f docker-compose.yml -f docker-compose.sentinel.yml up -d
 # Stop
 docker compose -f docker-compose.yml -f docker-compose.sentinel.yml down
 
-# Start Directus — M2-local dev (overlay TBD; see README "Compose layout").
+# Start Directus — MBP-local dev (overlay TBD; see README "Compose layout").
 # Until the overlay lands, run with the sentinel overlay against a local
 # .env.staging copy, or compose ad-hoc with `--env-file`.
 ```
@@ -44,7 +44,7 @@ Directus runs on sentinel, accessible from MBP at `http://sentinel.local:8055` o
 Two-file Kestra-style compose layout:
 - `docker-compose.yml` — portable base. No host port bindings, no host-specific volumes, no `host.docker.internal`. Just the `directus` and `directus-cache` services on the named `aceloans-directus` network with healthchecks and `restart: unless-stopped`.
 - `docker-compose.sentinel.yml` — staging overlay. Adds `8055:8055`, `pull_policy: if_not_present`, the `uploads`/`extensions` bind mounts, and `env_file: .env.staging`.
-- `docker-compose.m2.yml` — M2-local dev overlay (follow-up). Will restore `host.docker.internal:host-gateway` and `env_file: .env.local`.
+- `docker-compose.mbp.yml` — MBP-local dev overlay (follow-up). Will restore `host.docker.internal:host-gateway` and `env_file: .env.local`.
 
 Bring-up = `docker compose -f docker-compose.yml -f docker-compose.<target>.yml up -d`. Each environment owns its own `.env.<target>` file (gitignored; copy `.env.example`).
 
@@ -55,8 +55,8 @@ Bring-up = `docker compose -f docker-compose.yml -f docker-compose.<target>.yml 
 - SSL: `DB_SSL__REJECT_UNAUTHORIZED=false`
 - `DB_SCHEMA=directus`, `DB_SEARCH_PATH=directus,public,extensions,events` — directus first so its system tables resolve at startup, then the rest of the exposed schemas.
 
-**M2-local dev:** PostgreSQL client connecting to the local Supabase instance:
-- Host: `host.docker.internal` (Docker → macOS bridge; injected by the M2 overlay)
+**MBP-local dev:** PostgreSQL client connecting to the local Supabase instance:
+- Host: `host.docker.internal` (Docker → macOS bridge; injected by the MBP overlay)
 - Port: `54322` (Supabase local DB)
 - Search path: same as staging.
 
@@ -89,7 +89,7 @@ All external MCP servers (supabase, gdrive, coda) are disabled in `.claude/setti
 
 ## Environment Setup
 
-Copy `.env.example` to `.env.staging` (sentinel) or `.env.local` (M2-local dev once that overlay lands). Env files use `KEY=value` format (not YAML colons). Key variables:
+Copy `.env.example` to `.env.staging` (sentinel) or `.env.local` (MBP-local dev once that overlay lands). Env files use `KEY=value` format (not YAML colons). Key variables:
 - `DB_CLIENT=pg`, `DB_HOST`, `DB_PORT`, `DB_SCHEMA`, `DB_SEARCH_PATH` — database connection
 - `ADMIN_EMAIL` / `ADMIN_PASSWORD` — Directus admin credentials
 - `KEY` / `SECRET` — required Directus secrets (regenerate per environment)

@@ -4,7 +4,7 @@
 # ============================================================================
 #
 # Bootstraps the Directus stack on top of a running local Supabase. This
-# script is intended for M2-local development; sentinel staging does NOT use
+# script is intended for MBP-local development; sentinel staging does NOT use
 # this script — see ../README.md "Sentinel deployment".
 #
 # Prerequisites:
@@ -45,7 +45,7 @@ print_info()    { echo -e "\xE2\x84\xB9\xEF\xB8\x8F  $1"; }
 
 ENV_FILE=".env.local"
 COMPOSE_BASE="docker-compose.yml"
-COMPOSE_OVERLAY="${COMPOSE_OVERLAY:-docker-compose.m2.yml}"
+COMPOSE_OVERLAY="${COMPOSE_OVERLAY:-docker-compose.mbp.yml}"
 
 # ---------------------------------------------------------------------------
 # Step 1: Prerequisites
@@ -62,7 +62,7 @@ fi
 print_success "Docker Compose v2 available"
 
 if [ ! -f "$COMPOSE_OVERLAY" ]; then
-    print_warning "$COMPOSE_OVERLAY not found. The M2-local overlay is a follow-up task."
+    print_warning "$COMPOSE_OVERLAY not found. The MBP-local overlay is a follow-up task."
     print_info  "Set COMPOSE_OVERLAY to a different overlay file, or create it before re-running."
     exit 1
 fi

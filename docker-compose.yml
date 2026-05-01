@@ -8,8 +8,8 @@
 #   Sentinel (staging):
 #     docker compose -f docker-compose.yml -f docker-compose.sentinel.yml up -d
 #
-#   M2-local dev (follow-up; overlay TBD):
-#     docker compose -f docker-compose.yml -f docker-compose.m2.yml up -d
+#   MBP-local dev (follow-up; overlay TBD):
+#     docker compose -f docker-compose.yml -f docker-compose.mbp.yml up -d
 #
 # Pattern reference: kestra-kiron uses the same base + overlay split.
 # ==============================================================================
