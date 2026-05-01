@@ -1,0 +1,32 @@
+# ==============================================================================
+# Directus AceLoans — MBP-local dev overlay
+# ==============================================================================
+#
+# Composes with the portable base on the dev machine (MBP):
+#
+#   docker compose -f docker-compose.yml -f docker-compose.mbp.yml up -d
+#
+# Adds:
+#   - host_gateway alias so the Directus container can reach the local
+#     Supabase running on the macOS host via host.docker.internal:54322
+#   - Host port 8055:8055 for browser access at http://localhost:8055
+#   - pull_policy: if_not_present (avoid pulling on every up)
+#   - uploads/extensions bind mounts
+#   - .env.local environment file (gitignored)
+#
+# Sentinel uses docker-compose.sentinel.yml — see README.md.
+# ==============================================================================
+
+services:
+
+  directus:
+    pull_policy: if_not_present
+    ports:
+      - "8055:8055"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./uploads:/directus/uploads
+      - ./extensions:/directus/extensions:ro
+    env_file:
+      - .env.local
