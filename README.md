@@ -8,9 +8,12 @@ Directus is used as a headless CMS and API platform for managing data in the Kir
 
 ## Quick Start
 
-1. Copy `.env.example` to `.env.staging` (sentinel) or `.env.local` (M2-local dev) and fill in real values.
-2. Run the appropriate compose command for your target — see [Sentinel deployment](#sentinel-deployment) below.
-3. Access Directus at http://localhost:8055 (or `http://sentinel.local:8055` from M2 over LAN).
+1. Copy `.env.example` to `.env.staging` and fill in real values.
+2. Create (or switch to) a Docker context pointing at sentinel — see [Sentinel deployment](#sentinel-deployment) below.
+3. Run the sentinel compose command from your MBP using that context.
+4. Access Directus over LAN at `http://sentinel.local:8055` (adjust hostname if different).
+
+M2-local development is not documented yet; that workflow depends on the follow-up `docker-compose.m2.yml` overlay.
 
 ## Structure
 
@@ -28,16 +31,34 @@ removed; an M2-local dev overlay (`docker-compose.m2.yml`) is a follow-up task.
 
 ## Sentinel deployment
 
-Sentinel is the staging host (M2 connects to it over LAN). On the sentinel:
+Sentinel is the staging host. Deployment is driven **from your MBP** via a
+Docker context — you do not need to SSH into sentinel and run commands there.
+
+### One-time context setup (MBP)
+
+```bash
+# Create a Docker context that targets sentinel over SSH
+docker context create sentinel --docker "host=ssh://sentinel.local"
+```
+
+Adjust the host if your sentinel's hostname or IP differs.
+
+### Bring-up (MBP)
 
 ```bash
 git pull
 cp .env.example .env.staging   # first time only; fill in real values
+docker --context sentinel compose -f docker-compose.yml -f docker-compose.sentinel.yml up -d
+```
+
+Or set the context as active for the session:
+
+```bash
+docker context use sentinel
 docker compose -f docker-compose.yml -f docker-compose.sentinel.yml up -d
 ```
 
-LAN access from M2: `http://sentinel.local:8055` (verify hostname on the
-sentinel; adjust if different).
+LAN access from MBP: `http://sentinel.local:8055` (adjust hostname if different).
 
 ### Database target
 
@@ -52,8 +73,8 @@ shared `postgres` superuser.
 ### Secrets
 
 Secrets live in `.env.staging` only. 1Password / `op run` integration is out
-of scope for this layout; treat `.env.staging` as the source of truth on
-the sentinel host (gitignored).
+of scope for this layout; treat `.env.staging` as the source of truth on your
+MBP (gitignored).
 
 ## Configuration
 

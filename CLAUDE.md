@@ -21,7 +21,8 @@ npm run build
 # Watch mode (auto-rebuild on changes)
 npm run dev
 
-# Start Directus — sentinel staging (LAN-accessible from M2)
+# Start Directus — sentinel staging (run from MBP via Docker context)
+docker context use sentinel   # one-time; creates/selects the sentinel context
 docker compose -f docker-compose.yml -f docker-compose.sentinel.yml up -d
 
 # Stop
@@ -32,7 +33,7 @@ docker compose -f docker-compose.yml -f docker-compose.sentinel.yml down
 # .env.staging copy, or compose ad-hoc with `--env-file`.
 ```
 
-Directus runs at `http://localhost:8055` on the host that brought it up. From M2, sentinel is reachable at `http://sentinel.local:8055` over LAN. Health check: `/server/health`.
+Directus runs on sentinel, accessible from MBP at `http://sentinel.local:8055` over LAN. Health check: `/server/health`.
 
 ## Architecture
 
