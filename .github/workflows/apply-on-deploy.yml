@@ -1,0 +1,72 @@
+# Apply Directus collection manifests from db-schema to the live Directus
+# instance owned by this repo (apps-directus).
+#
+# The manifests live in the parent repo (KironPartner/db-schema) at
+# config/directus/*.json. This workflow checks them out at the
+# requested ref and applies each one against $DIRECTUS_URL using the
+# Directus content MCP CLI.
+#
+# Trigger:
+#   - workflow_dispatch with required `db_schema_ref` input (defaults to
+#     `main`). Use this for promoted, intentional deploys.
+#   - On push to apps-directus `main` (when the runtime container is
+#     promoted) — re-applies whatever manifests are on db-schema's main
+#     at that moment, idempotent.
+#
+# Required secrets:
+#   DIRECTUS_URL    - https URL of the target Directus instance
+#   DIRECTUS_TOKEN  - admin token for that instance
+#   DB_SCHEMA_PAT   - personal access token with read access to
+#                     KironPartner/db-schema (only needed if that repo
+#                     is private; for public repos GITHUB_TOKEN suffices
+#                     but it can't checkout private repos by default).
+
+name: Apply Directus manifests
+
+on:
+  workflow_dispatch:
+    inputs:
+      db_schema_ref:
+        description: "Ref of KironPartner/db-schema to apply (commit SHA or branch)"
+        required: true
+        default: "main"
+  push:
+    branches: [main]
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout apps-directus
+        uses: actions/checkout@v4
+
+      - name: Checkout db-schema for manifests
+        uses: actions/checkout@v4
+        with:
+          repository: KironPartner/db-schema
+          ref: ${{ inputs.db_schema_ref || 'main' }}
+          path: db-schema
+          token: ${{ secrets.DB_SCHEMA_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: List manifests to apply
+        run: ls -la db-schema/config/directus/*.json
+
+      - name: Apply each manifest
+        env:
+          DIRECTUS_URL:   ${{ secrets.DIRECTUS_URL }}
+          DIRECTUS_TOKEN: ${{ secrets.DIRECTUS_TOKEN }}
+        run: |
+          set -e
+          for f in db-schema/config/directus/*.json; do
+            echo "Applying $f..."
+            npx -y @directus/content-mcp apply "$f"
+          done
+
+      - name: Smoke test - list collections
+        env:
+          DIRECTUS_URL:   ${{ secrets.DIRECTUS_URL }}
+          DIRECTUS_TOKEN: ${{ secrets.DIRECTUS_TOKEN }}
+        run: |
+          curl -fsS -H "Authorization: Bearer $DIRECTUS_TOKEN" \
+            "$DIRECTUS_URL/collections" | jq '.data | map(.collection) | sort'
