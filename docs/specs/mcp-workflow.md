@@ -100,7 +100,7 @@ Schema changes always start in SQL, never in Directus.
 │  5. Hand-edit the relevant config/directus/*.json:           │
 │     - add interface, display, translations for new fields    │
 │     - update permissions per docs/specs/                     │
-│       directus-permission-matrix.md                          │
+│       directus-permission-matrix.md (db-schema)         │
 │                                                              │
 │  6. mcp apply config/directus/<file>.json                    │
 │                                                              │

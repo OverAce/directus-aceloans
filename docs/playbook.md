@@ -101,7 +101,7 @@ for f in config/directus/*.json; do
 done
 ```
 
-Empty diff = success. Non-empty = either re-export (if live state is correct) or re-apply (if the manifest is correct). See `docs/specs/directus-collection-manifest.md` §5.
+Empty diff = success. Non-empty = either re-export (if live state is correct) or re-apply (if the manifest is correct). See [`docs/specs/directus-collection-manifest.md`](https://github.com/KironPartner/db-schema/blob/main/docs/specs/directus-collection-manifest.md) §5.
 
 **7. Verify in the UI.**
 
@@ -128,7 +128,7 @@ Adding a column, changing a constraint, splitting a status enum — anything tha
 4. mcp sync --from-db <collection>                       (pulls new columns into Directus)
 5. Hand-edit config/directus/<file>.json:
      - add interface, display, translations for new fields
-     - update permissions per docs/specs/directus-permission-matrix.md
+     - update permissions per [docs/specs/directus-permission-matrix.md](https://github.com/KironPartner/db-schema/blob/main/docs/specs/directus-permission-matrix.md)
 6. mcp apply config/directus/<file>.json
 7. Round-trip check (step 6 from §2)
 8. Commit SQL + JSON together — they move as a pair
@@ -152,7 +152,7 @@ If the UI change is a dashboard or insight panel, it's UI-only — no JSON to co
 ### C. Permission change
 
 ```
-1. Edit config/directus/<schema>-permissions.json        (file format per directus-permission-matrix.md)
+1. Edit config/directus/<schema>-permissions.json        (file format per [directus-permission-matrix.md](https://github.com/KironPartner/db-schema/blob/main/docs/specs/directus-permission-matrix.md))
 2. Validate against RLS ceiling:
      node scripts/validate_directus_permissions.mjs <file>   (planned)
 3. mcp apply
@@ -175,13 +175,13 @@ Phase 1 = Directus is up but `directus_users` is empty (just the bootstrap admin
 - [ ] IP allowlist applied if the staff network is fixed.
 - [ ] Every committed `config/directus/*.json` has been applied via MCP and round-trip is empty.
 - [ ] The three submodule GitHub Actions are green (`lint-manifests`, `apply-on-deploy`, `round-trip-drift`).
-- [ ] Permission matrix in `docs/specs/directus-permission-matrix.md` matches what's live; impersonate each role and confirm.
+- [ ] Permission matrix in [`docs/specs/directus-permission-matrix.md`](https://github.com/KironPartner/db-schema/blob/main/docs/specs/directus-permission-matrix.md) matches what's live; impersonate each role and confirm.
 - [ ] Backup/restore drill against the `directus` schema specifically. Postgres-level `pg_dump -n directus` should restore cleanly to a fresh DB.
 
 ### Cutover sequence
 
 1. Drain — pause webhook ingress (Gravity Forms, Zoho Bigin, n8n) so no inserts happen during backfill.
-2. Backfill `directus_users` from `public.user` per `docs/specs/directus-users-migration.md` Phase 2. Map `role` column accordingly. The bidirectional sync flow (Phase 3) handles new users from this point on.
+2. Backfill `directus_users` from `public.user` per [`docs/specs/directus-users-migration.md`](https://github.com/KironPartner/db-schema/blob/main/docs/specs/directus-users-migration.md) Phase 2. Map `role` column accordingly. The bidirectional sync flow (Phase 3) handles new users from this point on.
 3. Apply Phase-2 permissions manifest (`config/directus/<schema>-permissions.json`) — switches everyone from "Admin or nothing" to scoped roles.
 4. Smoke-test each role: log in as a known Consultant, confirm they see only their own leads; same for Manager, Partner, Affiliate.
 5. Resume webhook ingress.
@@ -226,7 +226,7 @@ Start with the symptom column. Each entry points to the diagnostic command and t
 |---|---|---|
 | `Unauthorized` | Token invalid or revoked | Issue a new static token in Directus → Settings → Access Tokens; update `apps-directus/.mcp.json` |
 | `Unsupported Directus version` | Server below 11.12 | Bump the image pin in the submodule's `docker-compose.yml`; re-deploy |
-| `Validation failed` on a manifest | Lint rules violated | Run `node scripts/validate_directus_manifest.mjs <file>` (planned); see `docs/specs/directus-collection-manifest.md` §7 |
+| `Validation failed` on a manifest | Lint rules violated | Run `node scripts/validate_directus_manifest.mjs <file>` (planned); see [`docs/specs/directus-collection-manifest.md`](https://github.com/KironPartner/db-schema/blob/main/docs/specs/directus-collection-manifest.md) §7 |
 
 ### "Round-trip diff is non-empty"
 
@@ -247,7 +247,7 @@ diff non-empty
          apply, verify, commit
 ```
 
-If the drift is "Directus serialized a default that wasn't in the manifest," that's a Directus version artefact — re-export and accept the live state, ideally pinned to a known Directus version per `docs/specs/directus-collection-manifest.md` §8.
+If the drift is "Directus serialized a default that wasn't in the manifest," that's a Directus version artefact — re-export and accept the live state, ideally pinned to a known Directus version per [`docs/specs/directus-collection-manifest.md`](https://github.com/KironPartner/db-schema/blob/main/docs/specs/directus-collection-manifest.md) §8.
 
 ### "Round-trip CI failing nightly"
 
