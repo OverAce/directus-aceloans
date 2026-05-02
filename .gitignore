@@ -28,3 +28,7 @@ Thumbs.db
 # Temporary files
 *.tmp
 .cache/
+
+# Directus uploads (runtime media; keep dir, ignore contents)
+uploads/*
+!uploads/.gitkeep
