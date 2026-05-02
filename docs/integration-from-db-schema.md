@@ -59,18 +59,26 @@ npx @directus/content-mcp export > /tmp/exported.json
 diff config/directus/public-core.json /tmp/exported.json
 ```
 
-## Cross-references in `db-schema`
+## Cross-references
 
-The following specs live in the parent repo and govern this integration. Paths are
-relative to the `db-schema` repo root:
+### In this repo (apps-directus)
 
-- `docs/directus-playbook.md` &mdash; operator's runbook (first-time setup, day-to-day, going live, troubleshooting)
-- `docs/specs/directus-supabase-adapter.md` &mdash; adapter spec
-- `docs/specs/directus-collection-manifest.md` &mdash; manifest spec (round-trip integrity)
-- `docs/specs/directus-permission-matrix.md` &mdash; permission matrix
-- `docs/specs/directus-mcp-workflow.md` &mdash; MCP workflow
-- `docs/specs/directus-users-migration.md` &mdash; `directus_users` lifecycle (Phase 1 keeps it empty until activation)
-- `docs/specs/directus-sentinel-deployment.md` &mdash; sentinel staging deployment (this PR)
+Runtime, deployment, and ops docs (moved here 2026-05-02 from db-schema):
+
+- [`docs/playbook.md`](playbook.md) &mdash; operator's runbook (first-time setup, day-to-day, going live, troubleshooting)
+- [`docs/specs/sentinel-deployment.md`](specs/sentinel-deployment.md) &mdash; vulcan + sentinel multi-region deployment spec
+- [`docs/specs/mcp-workflow.md`](specs/mcp-workflow.md) &mdash; manifest apply/export workflow
+
+### In `db-schema` (parent repo)
+
+Schema-tied specs that stay with the migrations and manifests they describe:
+
+- [`docs/specs/directus-supabase-adapter.md`](https://github.com/KironPartner/db-schema/blob/main/docs/specs/directus-supabase-adapter.md) &mdash; adapter spec (formal contract)
+- [`docs/specs/directus-collection-manifest.md`](https://github.com/KironPartner/db-schema/blob/main/docs/specs/directus-collection-manifest.md) &mdash; manifest spec (round-trip integrity)
+- [`docs/specs/directus-permission-matrix.md`](https://github.com/KironPartner/db-schema/blob/main/docs/specs/directus-permission-matrix.md) &mdash; permission matrix (tied to RLS migrations)
+- [`docs/specs/directus-users-migration.md`](https://github.com/KironPartner/db-schema/blob/main/docs/specs/directus-users-migration.md) &mdash; `directus_users` lifecycle (Phase 1 keeps it empty until activation)
+- [`docs/directus-supabase-integration.md`](https://github.com/KironPartner/db-schema/blob/main/docs/directus-supabase-integration.md) &mdash; integration reference
+- [`docs/directus-configuration-guide.md`](https://github.com/KironPartner/db-schema/blob/main/docs/directus-configuration-guide.md) &mdash; UI + MCP configuration walkthrough
 
 ## Migration provenance
 
