@@ -30,7 +30,7 @@ Per the repo-separation contract ([directus-supabase-adapter.md §2](https://git
 | Location | Contents |
 |---|---|
 | `db-schema/.mcp.json` | Supabase MCP only. Must **not** gain a Directus entry — keeps this repo's MCP surface small. |
-| `apps-directus/.mcp.json` | Directus MCP entry. Lives next to the Directus container. |
+| `directus-aceloans/.mcp.json` | Directus MCP entry. Lives next to the Directus container. |
 | `db-schema/agents/directus-admin/.mcp.json` | Optional agent workspace that loads **both** Supabase + Directus MCPs for admins who need to cross the boundary. |
 
 The staging copy of the Directus MCP config lives at `config/directus/_staging/.mcp.json` until the submodule absorbs it.
@@ -172,7 +172,7 @@ Does not load Directus MCP. Schema-dev makes migrations and DBML; Directus sync 
 
 ## 8. CI enforcement
 
-Planned GitHub Actions job (lives in `apps-directus`, since it needs `DIRECTUS_URL`):
+Planned GitHub Actions job (lives in `directus-aceloans`, since it needs `DIRECTUS_URL`):
 
 1. Spin up a scratch Directus container seeded from migrations.
 2. `mcp apply` every `config/directus/*.json`.

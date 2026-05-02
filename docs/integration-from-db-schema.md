@@ -1,6 +1,6 @@
 # Integration with the parent `db-schema` repo
 
-This submodule (`apps-directus`) is the canonical home for Directus runtime,
+This submodule (`directus-aceloans`) is the canonical home for Directus runtime,
 container config, and Directus-side CI. The parent
 [`db-schema`](https://github.com/KironPartner/db-schema) repo owns the
 Postgres schema, migrations, and Directus collection manifests.
@@ -17,8 +17,8 @@ absorbed into the submodule.
 | Supabase schema, migrations, DBML                  | `db-schema`                                             |
 | ETL transformer framework                          | `db-schema`                                             |
 | Directus collection manifests (JSON)               | `db-schema` &mdash; `config/directus/*.json`            |
-| **Directus container, MCP config, Directus CI**    | **`apps-directus` (this repo)**                         |
-| Directus Flows, extensions, hooks                  | `apps-directus`                                         |
+| **Directus container, MCP config, Directus CI**    | **`directus-aceloans` (this repo)**                         |
+| Directus Flows, extensions, hooks                  | `directus-aceloans`                                         |
 
 ## What lives where in this submodule
 
@@ -61,7 +61,7 @@ diff config/directus/public-core.json /tmp/exported.json
 
 ## Cross-references
 
-### In this repo (apps-directus)
+### In this repo (directus-aceloans)
 
 Runtime, deployment, and ops docs (moved here 2026-05-02 from db-schema):
 

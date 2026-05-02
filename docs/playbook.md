@@ -8,7 +8,7 @@ Two repositories collaborate. They have **distinct concerns** and **release inde
 
 ```
 ┌───────────────────────────────┐    ┌───────────────────────────────┐
-│ db-schema (this repo)         │    │ apps-directus (submodule)     │
+│ db-schema (this repo)         │    │ directus-aceloans (submodule)     │
 │                               │    │                               │
 │ • supabase/migrations/        │    │ • docker-compose.yml          │
 │ • dbml/                       │    │ • setup-directus.sh           │
@@ -28,7 +28,7 @@ Two repositories collaborate. They have **distinct concerns** and **release inde
 **The contract:**
 
 - `db-schema` is the source of truth for the database schema **and** for Directus collection/field/permission metadata (committed JSON manifests).
-- `apps-directus` is the source of truth for the Directus runtime: the container, env, MCP config, setup scripts, GitHub Actions, and any Directus-side extensions or flows code.
+- `directus-aceloans` is the source of truth for the Directus runtime: the container, env, MCP config, setup scripts, GitHub Actions, and any Directus-side extensions or flows code.
 - Manifests cross the boundary at apply time: the submodule's CI checks out `db-schema` at a pinned ref and applies `config/directus/*.json` to the live Directus.
 - The `directus/` submodule is pinned in `db-schema`. Bumping the pin is a normal db-schema commit; the submodule develops its own history independently.
 
@@ -55,7 +55,7 @@ cd kiron-db
 git submodule update --init --recursive
 ```
 
-After this, `directus/` contains the `apps-directus` checkout pinned at the recorded commit.
+After this, `directus/` contains the `directus-aceloans` checkout pinned at the recorded commit.
 
 **2. Bring up Supabase locally and apply migrations.**
 
@@ -224,7 +224,7 @@ Start with the symptom column. Each entry points to the diagnostic command and t
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| `Unauthorized` | Token invalid or revoked | Issue a new static token in Directus → Settings → Access Tokens; update `apps-directus/.mcp.json` |
+| `Unauthorized` | Token invalid or revoked | Issue a new static token in Directus → Settings → Access Tokens; update `directus-aceloans/.mcp.json` |
 | `Unsupported Directus version` | Server below 11.12 | Bump the image pin in the submodule's `docker-compose.yml`; re-deploy |
 | `Validation failed` on a manifest | Lint rules violated | Run `node scripts/validate_directus_manifest.mjs <file>` (planned); see [`docs/specs/directus-collection-manifest.md`](https://github.com/KironPartner/db-schema/blob/main/docs/specs/directus-collection-manifest.md) §7 |
 
@@ -267,10 +267,10 @@ This isn't a Directus problem; it's the `events.email` SES/SNS plumbing. See CLA
 | Role permissions | `db-schema:config/directus/<schema>-permissions.json` | MCP-managed |
 | Flows (event hooks, automation) | `db-schema:config/directus/directus-flows.json` (planned) | MCP-managed |
 | Dashboards, Insight panels | Directus UI | UI-only |
-| File storage backend | `apps-directus:.env` (`STORAGE_*`) | env |
-| SMTP / email | `apps-directus:.env` (`EMAIL_*`) | env |
-| Bootstrap admin password | Directus UI / `apps-directus:.env` (`ADMIN_PASSWORD`) | env on first boot, UI thereafter |
-| Container image version | `apps-directus:docker-compose.yml` | submodule commit + db-schema submodule pin bump |
+| File storage backend | `directus-aceloans:.env` (`STORAGE_*`) | env |
+| SMTP / email | `directus-aceloans:.env` (`EMAIL_*`) | env |
+| Bootstrap admin password | Directus UI / `directus-aceloans:.env` (`ADMIN_PASSWORD`) | env on first boot, UI thereafter |
+| Container image version | `directus-aceloans:docker-compose.yml` | submodule commit + db-schema submodule pin bump |
 | Submodule pin | `db-schema:.gitmodules` + commit | commit in db-schema |
 
 ## 7. Cross-references
@@ -289,7 +289,7 @@ In db-schema (cross-repo):
 | Reference manifests | [`config/directus/events-collections.json`](https://github.com/KironPartner/db-schema/tree/main/config/directus), [`public-core.json`](https://github.com/KironPartner/db-schema/blob/main/config/directus/public-core.json) |
 | External-mappings decision history | [`docs/ARCHITECTURAL_DECISIONS_TODO.md`](https://github.com/KironPartner/db-schema/blob/main/docs/ARCHITECTURAL_DECISIONS_TODO.md) (AD-6) |
 
-In this repo (apps-directus):
+In this repo (directus-aceloans):
 
 | Topic | Doc |
 |---|---|

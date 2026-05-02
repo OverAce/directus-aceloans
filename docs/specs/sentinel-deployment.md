@@ -16,7 +16,7 @@ Two prod Directus instances against a single Supabase DB:
 
 ## Goal
 
-Stand up both prod Directus instances against the shared Supabase prod project (`toyorzhdbqthqcnsdjgx`, `eu-central-1`). The compose layout for sentinel mirrors `kestra-kiron`'s base + overlay split (already shipped in PR #4). Vulcan's deployment is shaped by easypanel/swarm and lives outside the `apps-directus` compose tree — that compose file is owned by the easypanel project, not this repo.
+Stand up both prod Directus instances against the shared Supabase prod project (`toyorzhdbqthqcnsdjgx`, `eu-central-1`). The compose layout for sentinel mirrors `kestra-kiron`'s base + overlay split (already shipped in PR #4). Vulcan's deployment is shaped by easypanel/swarm and lives outside the `directus-aceloans` compose tree — that compose file is owned by the easypanel project, not this repo.
 
 MBP-local dev runs against local Supabase via the `docker-compose.mbp.yml` overlay.
 
@@ -24,7 +24,7 @@ Kestra and Directus stay separate stacks. Kestra is the **template** for the fil
 
 ## Why
 
-Today both `directus-local` and `directus-staging` services in `apps-directus/docker-compose.yml` unconditionally bind `8055:8055` and embed host-specific concerns (`host.docker.internal:host-gateway`, env_file paths). This makes the compose file non-portable and couples sentinel deployment to local-dev knobs. The Kestra repo (`~/Projects/Kiron/kestra-kiron/`) already proves the cleaner pattern: base file is portable; overlay file owns sentinel-specific port bindings, mounts, and pull policies.
+Today both `directus-local` and `directus-staging` services in `directus-aceloans/docker-compose.yml` unconditionally bind `8055:8055` and embed host-specific concerns (`host.docker.internal:host-gateway`, env_file paths). This makes the compose file non-portable and couples sentinel deployment to local-dev knobs. The Kestra repo (`~/Projects/Kiron/kestra-kiron/`) already proves the cleaner pattern: base file is portable; overlay file owns sentinel-specific port bindings, mounts, and pull policies.
 
 ## Pattern reference (Kestra, do not modify)
 
@@ -32,9 +32,9 @@ Today both `directus-local` and `directus-staging` services in `apps-directus/do
 - `kestra-kiron/docker-compose.sentinel.yml` — overlay: `8080:8080`, `pull_policy: if_not_present`, `./flows` mount.
 - Bring-up on sentinel: `docker compose -f docker-compose.yml -f docker-compose.sentinel.yml up -d`.
 
-## Current state of apps-directus (verified 2026-04-30)
+## Current state of directus-aceloans (verified 2026-04-30)
 
-Repo lives as a git submodule at `db-kiron/directus/`. Remote: `OverAce/apps-directus`. Latest commit: `d67580c feat: refactor gravity forms operation and test setup`.
+Repo lives as a git submodule at `db-kiron/directus/`. Remote: `OverAce/directus-aceloans`. Latest commit: `d67580c feat: refactor gravity forms operation and test setup`.
 
 **Existing layout (`directus/docker-compose.yml`):**
 - Single file, two services with `profiles: [local]` and `profiles: [staging]`.
@@ -50,7 +50,7 @@ Repo lives as a git submodule at `db-kiron/directus/`. Remote: `OverAce/apps-dir
 - `.env.example` (gitignored real `.env*`), `uploads/`, `extensions/`, `README.md`, `CLAUDE.md`.
 
 **Stale claims to ignore from any older docs:**
-- "apps-directus is sparse" — false.
+- "directus-aceloans is sparse" — false.
 - Image `11.12.0` — wrong, current is `11.15.1`. Do not downgrade.
 - WIP path `db-kiron/.claude/worktrees/directus-etl-integration/...` — does not exist.
 - Branch `claude/directus-etl-integration-ToLty` — does not exist locally. Closest branches: `directus-integration`, `archive/claude-directus-supabase-integration`.
@@ -58,12 +58,12 @@ Repo lives as a git submodule at `db-kiron/directus/`. Remote: `OverAce/apps-dir
 ## Phase 1 — compose refactor (shipped in PR #4)
 
 > Historical: this is the deliverable for PR #4 (2026-04-30 → 2026-05-01),
-> which split the apps-directus compose into base + sentinel + MBP overlays
+> which split the directus-aceloans compose into base + sentinel + MBP overlays
 > and renamed `.env.staging` → `.env.sentinel` in subsequent prep work.
 > Naming below reflects the current `.env.sentinel` convention, not the
 > original wording.
 
-All work happened inside the `apps-directus` submodule (`db-kiron/directus/`).
+All work happened inside the `directus-aceloans` submodule (`db-kiron/directus/`).
 
 ### 1. `docker-compose.yml` (base, portable)
 - One `directus` service (image `directus/directus:${DIRECTUS_VERSION:-11.15.1}`) replacing the old `directus-local` + `directus-staging` split.
@@ -91,7 +91,7 @@ All work happened inside the `apps-directus` submodule (`db-kiron/directus/`).
 - Quick Start with `docker --context sentinel compose ... --env-file .env.sentinel up -d`.
 - Both work modes documented: remote-control from MBP and direct-on-host on sentinel.
 - SSH preflight: `ssh sentinel 'which docker && docker version'`.
-- Sentinel checkout path on the host: `/Volumes/Work/marcel/Projects/Kiron/apps-directus`.
+- Sentinel checkout path on the host: `/Volumes/Work/marcel/Projects/Kiron/directus-aceloans`.
 - 1Password / `op run` out of scope; secrets via `.env.sentinel`.
 
 ### 6. `CLAUDE.md` — update
@@ -107,7 +107,7 @@ All work happened inside the `apps-directus` submodule (`db-kiron/directus/`).
 - **Schema isolation:** `DB_SCHEMA=directus`, `DB_SEARCH_PATH=directus,public,extensions,events` — directus first so its system tables resolve at startup.
 - Image stays at `directus/directus:11.15.1`. **Do not downgrade.**
 - No 1Password injection. `.env.sentinel` (sentinel) / easypanel env config (vulcan) only.
-- No GitHub Actions / CI in apps-directus for the compose refactor (`apply-on-deploy.yml` was added later as a separate concern — see `apps-directus/.github/workflows/`).
+- No GitHub Actions / CI in directus-aceloans for the compose refactor (`apply-on-deploy.yml` was added later as a separate concern — see `directus-aceloans/.github/workflows/`).
 - No `docker-compose.m2.yml` (renamed to `docker-compose.mbp.yml`).
 
 ## Multi-instance topology (vulcan EU primary + sentinel US mirror)
@@ -169,7 +169,7 @@ PR #4 followed this sequence:
 5. Refactor compose into base + sentinel + MBP overlays; drop `profiles:` keys; consolidate `directus-local` + `directus-staging` into one base `directus` service.
 6. Update `README.md` and `CLAUDE.md`.
 7. Commit in focused chunks.
-8. Open PR against `OverAce/apps-directus` `main`, merge fast-forward.
+8. Open PR against `OverAce/directus-aceloans` `main`, merge fast-forward.
 9. Bump parent submodule pointer in `db-kiron`.
 
 ## Phase 1 verification (passed, no container runs)

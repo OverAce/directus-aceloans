@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Directus CMS configuration and custom extensions for the Kiron data warehouse. This is a **git submodule** of the parent [db-schema](https://github.com/KironPartner/db-schema) repo (origin: `OverAce/apps-directus`).
+Directus CMS configuration and custom extensions for the Kiron data warehouse. This is a **git submodule** of the parent [db-schema](https://github.com/KironPartner/db-schema) repo (origin: `OverAce/directus-aceloans`).
 
 Directus connects to the Supabase PostgreSQL database as its data interface, running in Docker alongside a Redis cache.
 

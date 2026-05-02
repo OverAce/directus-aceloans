@@ -1,5 +1,5 @@
 # Apply Directus collection manifests from db-schema to the live Directus
-# instance owned by this repo (apps-directus).
+# instance owned by this repo (directus-aceloans).
 #
 # The manifests live in the parent repo (KironPartner/db-schema) at
 # config/directus/*.json. This workflow checks them out at the
@@ -9,7 +9,7 @@
 # Trigger:
 #   - workflow_dispatch with required `db_schema_ref` input (defaults to
 #     `main`). Use this for promoted, intentional deploys.
-#   - On push to apps-directus `main` (when the runtime container is
+#   - On push to directus-aceloans `main` (when the runtime container is
 #     promoted) — re-applies whatever manifests are on db-schema's main
 #     at that moment, idempotent.
 #
@@ -38,7 +38,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - name: Checkout apps-directus
+      - name: Checkout directus-aceloans
         uses: actions/checkout@v4
 
       - name: Checkout db-schema for manifests
