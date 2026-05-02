@@ -56,12 +56,7 @@ jobs:
         env:
           DIRECTUS_URL:   ${{ secrets.DIRECTUS_URL }}
           DIRECTUS_TOKEN: ${{ secrets.DIRECTUS_TOKEN }}
-        run: |
-          set -e
-          for f in db-schema/config/directus/*.json; do
-            echo "Applying $f..."
-            npx -y @directus/content-mcp apply "$f"
-          done
+        run: node ./scripts/apply-manifests.mjs db-schema/config/directus/*.json
 
       - name: Smoke test - list collections
         env:
