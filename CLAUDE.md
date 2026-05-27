@@ -84,6 +84,10 @@ The only custom extension. A Directus Flow operation that integrates with WordPr
 
 **Build tooling:** Directus Extensions SDK (`directus-extension build`), TypeScript (strict mode, ES2019 target), Vue 3 for options UI.
 
+**Code style** (aligned with upstream Directus conventions):
+- TypeScript + ES modules (`import`/`export`); prefer `const` over `let`, avoid `var`.
+- Test files named `*.test.ts`, placed next to the source file. Use Vitest (`describe`/`test`/`expect`) if/when tests are added.
+
 ### MCP Configuration
 All external MCP servers (supabase, gdrive, coda) are disabled in `.claude/settings.local.json`. This submodule context is extension development only.
 
