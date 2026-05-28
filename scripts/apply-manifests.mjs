@@ -50,11 +50,19 @@ async function req(method, path, body) {
   return { status: res.status, json, text };
 }
 
-// PATCH first; on 404 fall back to POST. Returns "UPDATED" | "CREATED" | throws.
-async function upsert({ patchPath, postPath, patchBody, postBody, label }) {
+// PATCH first; on 404 fall back to POST (unless `noCreate` is set, in which case
+// a 404 is a hard failure). Returns "UPDATED" | "CREATED" | throws.
+async function upsert({ patchPath, postPath, patchBody, postBody, noCreate }) {
   const patch = await req("PATCH", patchPath, patchBody);
   if (patch.status >= 200 && patch.status < 300) return "UPDATED";
   if (patch.status === 404) {
+    if (noCreate) {
+      throw new Error(
+        `PATCH ${patchPath} -> 404 and create suppressed. ` +
+          `Directus metadata is missing for this DB-backed object — ` +
+          `restart Directus or re-introspect so it discovers the column, then re-run.`
+      );
+    }
     const post = await req("POST", postPath, postBody);
     if (post.status >= 200 && post.status < 300) return "CREATED";
     throw new Error(`POST ${postPath} -> ${post.status} ${post.text}`);
@@ -80,7 +88,6 @@ async function applyCollection(c) {
       postPath: `/collections`,
       patchBody: { meta },
       postBody: { collection: c.collection, meta, schema: null },
-      label: tag,
     });
     console.log(`${result.padEnd(8)} ${tag}`);
   } catch (err) {
@@ -111,7 +118,12 @@ async function applyField(f) {
       postPath: `/fields/${f.collection}`,
       patchBody,
       postBody,
-      label: tag,
+      // For non-alias (DB-backed) fields, a 404 means Directus has no metadata
+      // row for a column that Postgres owns. POSTing would ask Directus to
+      // create the column — exactly the ALTER TABLE we're trying to avoid.
+      // Surface it as a failure instead so the operator restarts Directus to
+      // re-introspect.
+      noCreate: !isAlias,
     });
     console.log(`${result.padEnd(8)} ${tag}${isAlias ? " (alias)" : ""}`);
   } catch (err) {
@@ -136,7 +148,6 @@ async function applyRelation(r) {
       postPath: `/relations`,
       patchBody: body,
       postBody: body,
-      label: tag,
     });
     console.log(`${result.padEnd(8)} ${tag}`);
   } catch (err) {
@@ -147,8 +158,15 @@ async function applyRelation(r) {
 
 for (const file of files) {
   console.log(`\n=== ${file} ===`);
-  const raw = await readFile(file, "utf8");
-  const manifest = JSON.parse(raw);
+  let manifest;
+  try {
+    const raw = await readFile(file, "utf8");
+    manifest = JSON.parse(raw);
+  } catch (err) {
+    failures++;
+    console.log(`FAIL     load ${file}: ${err.message}`);
+    continue;
+  }
 
   for (const c of manifest.collections ?? []) await applyCollection(c);
   for (const f of manifest.fields ?? []) await applyField(f);
