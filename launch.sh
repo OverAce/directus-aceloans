@@ -29,12 +29,15 @@ fi
 # Local Supabase Postgres underpins Directus in MBP-local dev (the container
 # connects to host.docker.internal:54322). Check it before Directus, since
 # Directus can't serve its MCP without a reachable database. pg_isready when
-# present (confirms Postgres is accepting connections), TCP probe otherwise.
+# present (confirms Postgres is accepting connections), nc port probe
+# otherwise. If neither is installed, skip the check rather than false-alarm.
 DB_PORT=54322
 if command -v pg_isready >/dev/null 2>&1; then
   db_reachable() { pg_isready -h localhost -p "$DB_PORT" -q; }
+elif command -v nc >/dev/null 2>&1; then
+  db_reachable() { nc -z -w2 localhost "$DB_PORT" >/dev/null 2>&1; }
 else
-  db_reachable() { (exec 3<>"/dev/tcp/localhost/$DB_PORT") 2>/dev/null; }
+  db_reachable() { return 0; }
 fi
 if ! db_reachable; then
   echo "⚠️  Local Supabase DB not reachable at localhost:$DB_PORT."

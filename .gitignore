@@ -32,3 +32,6 @@ Thumbs.db
 # Directus uploads (runtime media; keep dir, ignore contents)
 uploads/*
 !uploads/.gitkeep
+
+# Claude Code per-machine local settings (MCP approvals, permission allow-list)
+.claude/settings.local.json

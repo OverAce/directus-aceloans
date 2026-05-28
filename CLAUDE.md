@@ -99,7 +99,9 @@ The only custom extension. A Directus Flow operation that integrates with WordPr
 - Test files named `*.test.ts`, placed next to the source file. Use Vitest (`describe`/`test`/`expect`) if/when tests are added.
 
 ### MCP Configuration
-All external MCP servers (supabase, gdrive, coda) are disabled in `.claude/settings.local.json`. This submodule context is extension development only.
+This submodule context is extension development only. `.mcp.json` declares a single MCP server — `directus` (HTTP transport against `http://localhost:8055/mcp`, `Authorization: Bearer ${DIRECTUS_TOKEN}`). The parent repo's external servers (supabase, gdrive, coda) are not configured here.
+
+`.claude/settings.local.json` (gitignored, per-machine) pre-approves the `directus` server via `enabledMcpjsonServers` so it connects on launch without a trust prompt, and carries a permission allow-list for the Directus MCP tools and common extension-dev commands (read-only git, `npm` builds, `docker compose`, localhost health checks). Approvals are read at startup, so changes to it take effect on the next `./launch.sh`.
 
 ## Environment Setup
 
