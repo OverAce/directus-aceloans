@@ -41,7 +41,24 @@ else
 fi
 if ! db_reachable; then
   echo "⚠️  Local Supabase DB not reachable at localhost:$DB_PORT."
-  echo "   Start it first (from the parent repo): supabase start"
+  # Tell "stack not started" apart from "started but DB crash-looping"
+  # (e.g. Postgres can't write postmaster.pid on a full Docker disk) so the
+  # remedy below is the right one. Empty status = no container / no docker.
+  db_status=""
+  if command -v docker >/dev/null 2>&1; then
+    db_status="$(docker ps -a --filter 'name=supabase_db_' --format '{{.Status}}' 2>/dev/null | head -1)"
+  fi
+  case "$db_status" in
+    Restarting*|*unhealthy*)
+      echo "   The DB container is up but unhealthy ($db_status) — likely crash-looping."
+      echo "   See why:  docker logs --tail 50 \$(docker ps -aqf name=supabase_db_)"
+      echo "   Common cause is a full Docker disk; reclaim space, then:"
+      echo "             docker restart \$(docker ps -aqf name=supabase_db_)"
+      ;;
+    *)
+      echo "   Start it first (from the parent repo): supabase start"
+      ;;
+  esac
   echo "   Continuing — Directus can't connect to its database until it's up."
 fi
 
