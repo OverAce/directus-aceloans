@@ -10,7 +10,7 @@
 #   - Host port binding 8055:8055 for LAN access from MBP
 #   - Pull policy "if_not_present" (avoids pulling on every up)
 #   - uploads/extensions bind mounts
-#   - .env.staging environment file (cloud Supabase project; see README)
+#   - .env.sentinel environment file (cloud Supabase project; see README)
 # ==============================================================================
 
 services:
@@ -23,4 +23,4 @@ services:
       - ./uploads:/directus/uploads
       - ./extensions:/directus/extensions:ro
     env_file:
-      - .env.staging
+      - .env.sentinel

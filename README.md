@@ -8,7 +8,7 @@ Directus is used as a headless CMS and API platform for managing data in the Kir
 
 ## Quick Start
 
-1. Copy `.env.example` to `.env.staging` and fill in real values.
+1. Copy `.env.sentinel.example` to `.env.sentinel` and fill in real values.
 2. Create (or switch to) a Docker context pointing at sentinel — see [Sentinel deployment](#sentinel-deployment) below.
 3. Run the sentinel compose command from your MBP using that context.
 4. Access Directus over LAN at `http://sentinel.local:8055` (adjust hostname if different).
@@ -47,7 +47,7 @@ Adjust the host if your sentinel's hostname or IP differs.
 
 ```bash
 git pull
-cp .env.example .env.staging   # first time only; fill in real values
+cp .env.sentinel.example .env.sentinel   # first time only; fill in real values
 docker --context sentinel compose -f docker-compose.yml -f docker-compose.sentinel.yml up -d
 ```
 
@@ -67,19 +67,19 @@ Sentinel connects to the cloud Supabase prod project
 
 Before first bring-up, provision a dedicated DB user with access to the
 `directus` schema (separate Supabase MCP task — not part of this compose
-refactor). The sentinel's `.env.staging` should reference that user, not the
+refactor). The sentinel's `.env.sentinel` should reference that user, not the
 shared `postgres` superuser.
 
 ### Secrets
 
-Secrets live in `.env.staging` only. 1Password / `op run` integration is out
-of scope for this layout; treat `.env.staging` as the source of truth on your
+Secrets live in `.env.sentinel` only. 1Password / `op run` integration is out
+of scope for this layout; treat `.env.sentinel` as the source of truth on your
 MBP (gitignored).
 
 ## Configuration
 
 The main configuration is handled through environment variables. See
-`.env.example` for the full required and optional set.
+`.env.sentinel.example` for the full required and optional set.
 
 ## Development
 
