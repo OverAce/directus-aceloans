@@ -1,30 +1,15 @@
 #!/usr/bin/env bash
 # Launch Claude Code in the directus submodule with Directus MCP wired up.
 #
-# Resolves DIRECTUS_URL / DIRECTUS_TOKEN (and every other parent-repo MCP
-# secret) from 1Password at child-process spawn time via `op run`. Keeps
-# nothing in this shell or on disk.
+# Injects DIRECTUS_TOKEN from 1Password through the shared op-launch.sh
+# resolver (--profile kiron --agent directus), which resolves op:// refs at
+# child-process spawn time. Keeps nothing in this shell or on disk.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-ENV_FILE="$SCRIPT_DIR/../agents/.env"
 
-if [ ! -f "$ENV_FILE" ]; then
-  echo "❌ env template not found at $ENV_FILE"
-  echo "   Copy ../agents/.env.example → ../agents/.env in the parent repo."
-  exit 1
-fi
-
-if ! command -v op >/dev/null 2>&1; then
-  echo "❌ 1Password CLI 'op' not found in PATH"
-  exit 1
-fi
-
-if ! op whoami >/dev/null 2>&1; then
-  echo "🔐 1Password not signed in — prompting…"
-  OP_SIGNIN_CMD="$(op signin)" || { echo "❌ 1Password sign-in failed"; exit 1; }
-  eval "$OP_SIGNIN_CMD"
-fi
+OP_LAUNCH="${OP_SECRETS_HOME:-$HOME/developer/dotfiles/agents/secrets}/op-launch.sh"
+[ -x "$OP_LAUNCH" ] || { echo "❌ op-launch.sh missing or not executable at $OP_LAUNCH"; exit 1; }
 
 # Local Supabase Postgres underpins Directus in MBP-local dev (the container
 # connects to host.docker.internal:54322). Check it before Directus, since
@@ -69,4 +54,4 @@ if ! curl -sf -o /dev/null "http://localhost:8055/server/ping"; then
 fi
 
 cd "$SCRIPT_DIR"
-exec op run --env-file="$ENV_FILE" --no-masking -- claude "$@"
+exec "$OP_LAUNCH" --profile kiron --agent directus -- claude "$@"
