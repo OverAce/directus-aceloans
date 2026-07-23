@@ -1,7 +1,7 @@
 # Environment files (never commit real secrets)
 .env
 .env.*
-!.env.example
+!.env.sentinel.example
 
 # Dependencies / build output (used by extensions; safe defaults)
 node_modules/

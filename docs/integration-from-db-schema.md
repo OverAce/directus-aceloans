@@ -29,7 +29,7 @@ absorbed into the submodule.
 | `docker-compose.mbp.yml`                          | MBP-local dev overlay (follow-up; not yet present).      |
 | `scripts/setup-directus.sh`                       | Local-dev bootstrap: schema + KEY/SECRET + bring-up.     |
 | `extensions/operations/gravity-forms-operation/`  | Custom Directus Flow operation (lives on its own branch; rebased onto `main` on merge). |
-| `.env.example`                                    | Template for `.env.staging` / `.env.local`.              |
+| `.env.sentinel.example`                                    | Template for `.env.sentinel` / `.env.local`.              |
 
 ## What does NOT move into this submodule
 

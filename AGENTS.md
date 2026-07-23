@@ -30,7 +30,7 @@ docker compose -f docker-compose.yml -f docker-compose.sentinel.yml down
 
 # Start Directus — MBP-local dev (overlay TBD; see README "Compose layout").
 # Until the overlay lands, run with the sentinel overlay against a local
-# .env.staging copy, or compose ad-hoc with `--env-file`.
+# .env.sentinel copy, or compose ad-hoc with `--env-file`.
 ```
 
 Directus runs on sentinel, accessible from MBP at `http://sentinel.local:8055` over LAN. Health check: `/server/health`.
@@ -43,10 +43,10 @@ Directus runs on sentinel, accessible from MBP at `http://sentinel.local:8055` o
 
 Two-file Kestra-style compose layout:
 - `docker-compose.yml` — portable base. No host port bindings, no host-specific volumes, no `host.docker.internal`. Just the `directus` and `directus-cache` services on the named `aceloans-directus` network with healthchecks and `restart: unless-stopped`.
-- `docker-compose.sentinel.yml` — staging overlay. Adds `8055:8055`, `pull_policy: if_not_present`, the `uploads`/`extensions` bind mounts, and `env_file: .env.staging`.
+- `docker-compose.sentinel.yml` — staging overlay. Adds `8055:8055`, `pull_policy: if_not_present`, the `uploads`/`extensions` bind mounts, and `env_file: .env.sentinel`.
 - `docker-compose.mbp.yml` — MBP-local dev overlay (follow-up). Will restore `host.docker.internal:host-gateway` and `env_file: .env.local`.
 
-Bring-up = `docker compose -f docker-compose.yml -f docker-compose.<target>.yml up -d`. Each environment owns its own `.env.<target>` file (gitignored; copy `.env.example`).
+Bring-up = `docker compose -f docker-compose.yml -f docker-compose.<target>.yml up -d`. Each environment owns its own `.env.<target>` file (gitignored; copy `.env.sentinel.example`).
 
 ### Database Connection
 **Sentinel staging:** cloud Supabase project `toyorzhdbqthqcnsdjgx`. Use a dedicated DB user with access to the `directus` schema (provisioning is a separate Supabase MCP task — do not reuse the `postgres` superuser).
@@ -89,7 +89,7 @@ All external MCP servers (supabase, gdrive, coda) are disabled in `.Codex/settin
 
 ## Environment Setup
 
-Copy `.env.example` to `.env.staging` (sentinel) or `.env.local` (MBP-local dev once that overlay lands). Env files use `KEY=value` format (not YAML colons). Key variables:
+Copy `.env.sentinel.example` to `.env.sentinel` (sentinel) or `.env.local` (MBP-local dev once that overlay lands). Env files use `KEY=value` format (not YAML colons). Key variables:
 - `DB_CLIENT=pg`, `DB_HOST`, `DB_PORT`, `DB_SCHEMA`, `DB_SEARCH_PATH` — database connection
 - `ADMIN_EMAIL` / `ADMIN_PASSWORD` — Directus admin credentials
 - `KEY` / `SECRET` — required Directus secrets (regenerate per environment)
@@ -97,7 +97,7 @@ Copy `.env.example` to `.env.staging` (sentinel) or `.env.local` (MBP-local dev 
 - `CACHE_ENABLED=true`, `CACHE_STORE=redis`, `REDIS_HOST=aceloans-directus-cache`
 - Staging adds: `DB_SSL__REJECT_UNAUTHORIZED=false`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
 
-1Password / `op run` injection is out of scope here; secrets via `.env.staging` only.
+1Password / `op run` injection is out of scope here; secrets via `.env.sentinel` only.
 
 ## Relationship to Parent Repo
 
