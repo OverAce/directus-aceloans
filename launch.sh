@@ -8,7 +8,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
-OP_LAUNCH="${OP_SECRETS_HOME:-$HOME/developer/dotfiles/agents/secrets}/op-launch.sh"
+OP_LAUNCH="${OP_SECRETS_HOME:-$HOME/developer/dotfiles/agents/ops/secrets}/op-launch.sh"
 [ -x "$OP_LAUNCH" ] || { echo "❌ op-launch.sh missing or not executable at $OP_LAUNCH"; exit 1; }
 
 # Local Supabase Postgres underpins Directus in MBP-local dev (the container
