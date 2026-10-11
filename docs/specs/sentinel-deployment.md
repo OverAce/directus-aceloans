@@ -1,7 +1,7 @@
 # Directus Multi-Region Deployment (Vulcan + Sentinel)
 
-**Status:** Compose refactor shipped (PR #4, 2026-04-30 → 2026-05-01). Sentinel bring-up + vulcan deployment pending.
-**Last verified:** 2026-05-02
+**Status:** Compose refactor shipped (PR #4, 2026-04-30 → 2026-05-01). Both hosts are running. Access path and `PUBLIC_URL` are in [vulcan-sentinel-mirror.md](vulcan-sentinel-mirror.md) (2026-10-06), which supersedes the per-instance `PUBLIC_URL` decision below.
+**Last verified:** 2026-05-02 for the compose split. Mirror access and license binding verified 2026-10-06 in the newer spec.
 
 ## Topology (current decision, 2026-05-02)
 
@@ -10,9 +10,9 @@ Two prod Directus instances against a single Supabase DB:
 | Instance | Host | Deploy shape | Public URL | Role |
 |---|---|---|---|---|
 | **vulcan** | EU VPS | easypanel / Docker swarm | `https://data.kironhitel.hu` (Cloudflared tunnel) | EU primary, runs all Flows |
-| **sentinel** | Mac mini | Docker Compose (this repo's pattern) | Tailscale FQDN (admin/ops only) | US mirror, Flows disabled |
+| **sentinel** | Mac mini | Docker Compose (this repo's pattern) | Access via Tailscale. `PUBLIC_URL` matches vulcan. See [vulcan-sentinel-mirror.md](vulcan-sentinel-mirror.md). | US mirror, Flows disabled |
 
-**This was inverted from the 2026-05-01 decision.** Earlier drafts of this spec named sentinel as "the EU production Directus instance"; that's no longer correct. Vulcan is the EU-resident, public-facing instance; sentinel is a US-side mirror used for admin/ops with Tailscale-only access.
+**This was inverted from the 2026-05-01 decision.** Earlier drafts of this spec named sentinel as "the EU production Directus instance"; that's no longer correct. Vulcan is the EU-resident, public-facing instance; sentinel is a US-side mirror used for admin and ops. It is not Tailscale-only; the lab hostname also reaches it. See [vulcan-sentinel-mirror.md](vulcan-sentinel-mirror.md).
 
 ## Goal
 
@@ -112,17 +112,14 @@ All work happened inside the `directus-aceloans` submodule (`db-kiron/directus/`
 
 ## Multi-instance topology (vulcan EU primary + sentinel US mirror)
 
-**Decision (2026-05-02, supersedes 2026-05-01):** vulcan is the **EU primary Directus instance** (easypanel/swarm on a VPS, Cloudflared tunnel at `https://data.kironhitel.hu`); sentinel is the **US mirror** (Mac mini, Docker Compose, Tailscale-only access for admin/ops). Both point at the same prod Supabase (`toyorzhdbqthqcnsdjgx`, `eu-central-1`). This is a standard Directus horizontal-scale pattern; Directus stores its own state in the DB so collections/branding/roles/permissions/users/flows are automatically shared.
+**Decision (2026-05-02, supersedes 2026-05-01):** vulcan is the **EU primary Directus instance** (easypanel/swarm on a VPS, Cloudflared tunnel at `https://data.kironhitel.hu`); sentinel is the **US mirror** (Mac mini, Docker Compose, admin/ops access). Both point at the same prod Supabase (`toyorzhdbqthqcnsdjgx`, `eu-central-1`). This is a standard Directus horizontal-scale pattern; Directus stores its own state in the DB so collections/branding/roles/permissions/users/flows are automatically shared. The 2026-05-02 text called sentinel Tailscale-only. That is no longer true; see [vulcan-sentinel-mirror.md](vulcan-sentinel-mirror.md).
 
 ### Required invariants for both instances
 
 - **Shared `KEY` and `SECRET` env vars.** These sign session tokens and password-reset links. Different values across instances = sessions and reset flows break across hosts. Generate once, store in 1Password, copy to both env files (vulcan's easypanel env config + sentinel's `.env.sentinel`).
 - **Same DB target.** Both instances use the `directus_app` scoped DB user against `db.toyorzhdbqthqcnsdjgx.supabase.co`. Schema state is shared by definition — Directus reads `directus_collections`, `directus_fields`, `directus_settings`, `directus_users`, `directus_permissions`, `directus_flows` from the DB on every request.
 - **Same Cloudinary storage** — already configured in the legacy Proxmox env. Both instances read/write the same bucket so file uploads are coherent.
-- **Per-instance `PUBLIC_URL`.**
-  - vulcan: `https://data.kironhitel.hu` (Cloudflared tunnel, public-facing).
-  - sentinel: a Tailscale FQDN under `*.robin-prometheus.ts.net` (admin/ops only, not public). Final hostname TBD.
-  Email links and OAuth callbacks resolve to whichever instance generated them — so a password-reset email sent from sentinel will deep-link to sentinel's Tailscale URL, which is correct only if the recipient is on the tailnet. For end-user-facing email flows, route through vulcan.
+- **One `PUBLIC_URL` for both instances:** `https://data.kironhitel.hu`. Tailscale reaches the sentinel box and is not `PUBLIC_URL`. This replaces the 2026-05-02 per-instance URL. The current value, the v12 target, and the live lab-hostname exposure are in [vulcan-sentinel-mirror.md](vulcan-sentinel-mirror.md). A second `PUBLIC_URL` on the shared database spends another v12 license activation.
 - **Per-instance Redis.** Each instance runs its own `aceloans-directus-cache`. Cache divergence after writes (a few seconds) is acceptable.
 
 ### Flow ownership: vulcan (EU) only
@@ -185,7 +182,7 @@ What's left before sentinel can come up:
 
 1. **Provision `directus_app` DB user** on Supabase prod via MCP, granted access to the `directus` schema (and `usage` on supporting schemas in `DB_SEARCH_PATH`). Do not reuse the `postgres` superuser.
 2. **Generate KEY/SECRET pair** to be shared with vulcan; store in 1Password.
-3. **Decide sentinel's Tailscale FQDN** (`*.robin-prometheus.ts.net`); fill in `PUBLIC_URL` in `.env.sentinel`.
+3. **Do not set `PUBLIC_URL` to the Tailscale name.** The name is `sentinel.robin-prometheus.ts.net`. The v12 value for both hosts is `https://data.kironhitel.hu`. See [vulcan-sentinel-mirror.md](vulcan-sentinel-mirror.md).
 4. **Determine the Flow-disable mechanism** for Directus 11.15.1 (verify `FLOWS_EXEC_ALLOW_LIST` semantics, or write a hook extension that no-ops `flows.run` on sentinel only).
 5. **Decide Cloudinary + SES credential rotation** scope: same legacy Proxmox credentials reused, or new ones provisioned for the new instances?
 6. **Bring up sentinel** via `docker --context sentinel compose ... up -d` from MBP, verify `/server/health`, log in, confirm Flows are not firing on sentinel by triggering a known-Flow event and observing it run only on vulcan.

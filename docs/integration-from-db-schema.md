@@ -67,6 +67,7 @@ Runtime, deployment, and ops docs (moved here 2026-05-02 from db-schema):
 
 - [`docs/playbook.md`](playbook.md) &mdash; operator's runbook (first-time setup, day-to-day, going live, troubleshooting)
 - [`docs/specs/sentinel-deployment.md`](specs/sentinel-deployment.md) &mdash; vulcan + sentinel multi-region deployment spec
+- [`docs/specs/vulcan-sentinel-mirror.md`](specs/vulcan-sentinel-mirror.md) &mdash; current access path, shared `PUBLIC_URL`, and v12 license binding
 - [`docs/specs/mcp-workflow.md`](specs/mcp-workflow.md) &mdash; manifest apply/export workflow
 
 ### In `db-schema` (parent repo)
