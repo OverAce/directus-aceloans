@@ -1,0 +1,15 @@
+{
+  "name": "directus-aceloans",
+  "private": true,
+  "description": "Directus deployment for AceLoans. Schema and configuration sync via @directus/cli (d6s).",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "sync:pull": "d6s sync pull --from sentinel",
+    "sync:diff": "d6s sync diff --to local"
+  },
+  "devDependencies": {
+    "@directus/cli": "^12.3.0"
+  }
+}

@@ -33,7 +33,20 @@ docker compose -f docker-compose.yml -f docker-compose.sentinel.yml down
 # .env.sentinel copy, or compose ad-hoc with `--env-file`.
 ```
 
-Directus runs on sentinel, accessible from MBP at `http://sentinel.local:8055` over LAN. Health check: `/server/health`.
+Directus runs on sentinel, accessible from MBP at `http://sentinel.local:8055` over LAN. Liveness probe: `/server/ping`.
+
+## Schema and configuration sync
+
+`@directus/cli` (`d6s`, major 12, see `package.json`) moves schema and configuration between instances through JSON under `sync/`. It requires Directus 12.2.0 or later, and the source and target must be the same patch. Sentinel is still 11.15.1, so the first `sync:pull` waits until that image bump.
+
+Profiles are in `directus.config.json` (URLs only). Tokens resolve as `DIRECTUS_SENTINEL_TOKEN` and `DIRECTUS_LOCAL_TOKEN`, or from `~/.directus/credentials.json`. Neither is committed.
+
+```bash
+npm run sync:pull   # d6s sync pull --from sentinel
+npm run sync:diff   # d6s sync diff --to local
+```
+
+A push is explicit: `npx d6s sync push --to local`. Default mode is `merge`. Read `sync:diff` before any push. Parent Postgres migrations own table DDL, and a schema apply can try to create a table that already exists. `scripts/apply-manifests.mjs` still overlays the parent repo's collection manifests; that file shape is separate from `d6s`.
 
 ## Architecture
 
@@ -93,7 +106,7 @@ Copy `.env.sentinel.example` to `.env.sentinel` (sentinel) or `.env.local` (MBP-
 - `DB_CLIENT=pg`, `DB_HOST`, `DB_PORT`, `DB_SCHEMA`, `DB_SEARCH_PATH` — database connection
 - `ADMIN_EMAIL` / `ADMIN_PASSWORD` — Directus admin credentials
 - `KEY` / `SECRET` — required Directus secrets (regenerate per environment)
-- `PUBLIC_URL` — externally visible Directus URL (sentinel: `http://sentinel.local:8055`)
+- `PUBLIC_URL` — externally visible Directus URL. v12 target for vulcan and sentinel is `https://data.kironhitel.hu`. `http://sentinel.local:8055` is LAN access, not this value. See `docs/specs/vulcan-sentinel-mirror.md`.
 - `CACHE_ENABLED=true`, `CACHE_STORE=redis`, `REDIS_HOST=aceloans-directus-cache`
 - Staging adds: `DB_SSL__REJECT_UNAUTHORIZED=false`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
 

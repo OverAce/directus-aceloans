@@ -1,0 +1,20 @@
+{
+  "profiles": {
+    "sentinel": {
+      "url": "https://directus.lab.marceldarvas.com",
+      "auth": { "type": "token" }
+    },
+    "local": {
+      "url": "http://localhost:8055",
+      "auth": { "type": "token" }
+    }
+  },
+  "directory": "sync",
+  "format": "json",
+  "projects": {
+    "default": {
+      "schema": true,
+      "mode": "merge"
+    }
+  }
+}

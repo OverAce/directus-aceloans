@@ -27,7 +27,7 @@ services:
     healthcheck:
       # 127.0.0.1, not localhost: busybox wget resolves localhost to ::1 and
       # stops there, while Directus listens on IPv4 only.
-      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8055/server/health || exit 1"]
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8055/server/ping || exit 1"]
       interval: 15s
       timeout: 10s
       retries: 5
