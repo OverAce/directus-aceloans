@@ -178,6 +178,7 @@ async function resolvePolicyForRole(role) {
   const roles = await getData(`/roles?filter[name][_eq]=${encodeURIComponent(role)}&fields=id&limit=2`);
   const roleId = roles[0]?.id;
   if (!roleId) throw new Error(`role "${role}" not found`);
+  if (roles.length > 1) throw new Error(`role name "${role}" is ambiguous: matches more than one role`);
   const access = await getData(`/access?filter[role][_eq]=${roleId}&fields=policy.id,policy.admin_access&limit=-1`);
   const policies = access.map((a) => a.policy).filter((p) => p && !p.admin_access);
   if (policies.length !== 1) {

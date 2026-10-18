@@ -141,6 +141,21 @@ test("5. preflight failure: bogus role aborts before any mutation", async () => 
   restore();
 });
 
+test("5b. preflight failure: duplicate role name aborts before any mutation", async () => {
+  const roleName = LEADER_GRANTS()[0].role;
+  const dupId = sql(`INSERT INTO directus.directus_roles (id, name) VALUES (gen_random_uuid(), '${roleName.replace(/'/g, "''")}') RETURNING id;`);
+  try {
+    sql(`DELETE FROM directus.directus_permissions WHERE policy='${LEADER}' AND collection='account';`);
+    const r = runApply([fixture(LEADER_GRANTS())]);
+    assert.notEqual(r.code, 0, r.stdout);
+    assert.match(r.stdout, /ambiguous/);
+    assert.equal(permRows(LEADER, "account").length, 0, "no grants recreated under an ambiguous role");
+  } finally {
+    sql(`DELETE FROM directus.directus_roles WHERE id='${dupId}';`);
+    restore();
+  }
+});
+
 test("6. drift (Advisor): reported + non-zero by default, removed by --prune", async () => {
   sql(`INSERT INTO directus.directus_permissions (policy,collection,action,fields,permissions,validation) ` +
     `VALUES ('${ADVISOR}','account','read','["*"]'::jsonb,'{}'::jsonb,'{}'::jsonb);`);
