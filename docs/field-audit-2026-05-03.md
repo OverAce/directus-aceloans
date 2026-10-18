@@ -18,6 +18,48 @@ readonly, or drop from the manifest.
 
 Generated: 2026-05-03 from `localhost:54322`.
 
+---
+
+## Proposed markup (Claude, 2026-06-29) — for Marcel's review
+
+This is a first-pass proposal. **Nothing is applied to Directus yet.** Confirm or
+adjust the cross-cutting rules below, then I translate to MCP `fields` updates.
+
+> ⚠️ Staleness note: the `events.consent`, `events.consent_request`, and
+> `events.email` rows below show all-`-` meta, but the m2o display templates +
+> `special=['m2o']` fixes from the 2026-05-03 recovery session landed *after* this
+> snapshot. Re-pull before applying so we don't clobber those. Calendar was not
+> touched and is still raw.
+
+### Cross-cutting rules (the actual decisions)
+
+| # | Rule | Affected | Treatment |
+|---|------|----------|-----------|
+| R1 | **`events.*` is system data** — written by pipelines (n8n, SES, calendar sync), never hand-edited in Directus. | all of `events.calendar`, `events.consent`, `events.consent_request`, `events.email` | **all fields readonly** |
+| R2 | **Sync/transport internals** — meaningless to a human reader. | `ical_uid`, `etag`, `color_id`, `visibility`, `count_sequence`, `match_method`, `is_source_event_sync`, `is_source_consultation`, `event_type_calendar`, `drive_folder_path`, `meeting_notes_file_id`, `meeting_notes_folder_id`, `form_link_token`, `id_email_message`, `origin_context` | **hide** |
+| R3 | **ETL data-quality fields** — relevant only to a data steward, noise for sales. | `is_needs_review`, `review_notes`, `is_name_corrected`, `date_synced_to_crm` (contact/deal/lead/loan/loan_application) | **group: `review`**, hidden by default |
+| R4 | **Legacy / source-tracking plumbing.** | `id_legacy_agent`, `is_legacy_format`, `legacy_source`, `id_lead_entry`, `id_consent_entry`, `id_request_entry`, `source_url`, `coda_source_url`, `external_application_id`, `origin_system`, `origin_type`, `origin_entry_id`, `origin_parent_entry_id` | **hide** (keep readonly) |
+| R5 | **External-system IDs** — reference only. | `consultant_zoho_id`, `id_crm_bigin`, `id_source_account`, `id_source_user` | **readonly**, group: `external` |
+| R6 | **Audit columns** — already mostly readonly; make uniform + tuck away. | `date_created`, `date_modified`, `date_event_created`, `date_event_modified`, `id_user_created`, `id_user_modified`, `id_created_by`, `id_modifier`, `id_auth` | **readonly**, group: `metadata` |
+| R7 | **Trigger-denormalized identity** — maintained by `sync.refresh_lead_primary_applicant()`. | `lead.name_first`, `lead.name_last`, `lead.email`, `lead.phone` | **readonly** (already), group: `primary_applicant` |
+| R8 | **PK / UUID identifiers** — visible for reference but never editable. | every `id_<entity>` primary key | **readonly** (most already are) |
+
+### Drop candidates — questions, NOT proposed drops
+
+These look redundant; I will **not** drop anything without your confirmation (separate migration):
+
+- `public.meeting`: `id_google_calendar_event` (text) vs `id_calendar_event` (text → events.calendar) vs `google_calendar_url` — three calendar pointers. Are all three live?
+- `events.calendar`: `event_type` vs `event_type_calendar` — duplicate intent?
+- `events.calendar`: denormalized snapshots (`name_lead`, `lead_email`, `name_consultant`, `consultant_email`, `sales_phase`) — keep for at-a-glance, or hide behind R2?
+
+### Open question
+
+The presets work (issue OverAce/directus-aceloans#10) controls *which* columns show in
+the **list** view per role; this audit controls the **detail/form** view (hidden/readonly/group).
+They're complementary — but if you'd rather a column never appear anywhere, that's `hide` here.
+
+---
+
 ## events.calendar
 
 | sort | field | type | hidden | readonly | interface | display | group | comment |
