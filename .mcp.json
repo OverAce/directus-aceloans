@@ -2,7 +2,7 @@
   "mcpServers": {
     "directus": {
       "type": "http",
-      "url": "http://localhost:8055/mcp",
+      "url": "${DIRECTUS_URL:-https://directus.lab.marceldarvas.com}/mcp",
       "headers": {
         "Authorization": "Bearer ${DIRECTUS_TOKEN}"
       }
