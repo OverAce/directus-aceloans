@@ -10,13 +10,13 @@ Directus connects to the Supabase PostgreSQL database as its data interface, run
 
 ## Launching Claude Code in this submodule
 
-`.mcp.json` wires the Directus MCP server (HTTP transport against `http://localhost:8055/mcp`) and reads `DIRECTUS_TOKEN` from the env.
+`.mcp.json` wires the Directus MCP server (HTTP transport against `${DIRECTUS_URL}/mcp`, default sentinel at `https://directus.lab.marceldarvas.com`) and reads `DIRECTUS_TOKEN` from the env.
 
 ```bash
 ./launch.sh
 ```
 
-`launch.sh` wraps `claude` with `op run --env-file=../agents/.env`, so 1Password resolves `DIRECTUS_URL` / `DIRECTUS_TOKEN` (canonical ref: `op://AI/Directus - AceLoans - API MCP/api key`) at child-process spawn time — nothing is cached on disk. Start Directus first (`docker compose -f docker-compose.yml -f docker-compose.mbp.yml up -d`) so `:8055/mcp` is reachable; the launcher warns if it isn't.
+`launch.sh` wraps `claude` with the shared `op-launch.sh` resolver (`--profile kiron --agent directus`), so 1Password resolves `DIRECTUS_TOKEN` (canonical ref: `op://AI/Directus - AceLoans - API MCP/api key`) at child-process spawn time — nothing is cached on disk. It exports `DIRECTUS_URL` (default sentinel; set it to target another instance, e.g. `http://localhost:8055`) and warns if `$DIRECTUS_URL/server/ping` doesn't answer.
 
 ## Development Commands
 
